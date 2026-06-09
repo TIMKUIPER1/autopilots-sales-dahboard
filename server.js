@@ -535,7 +535,7 @@ function normalizeCalls({ conversations, voiceCallLogs, setters, closers }) {
         answered: isAnsweredConversation(conversation),
         result: "Call",
         score: 0,
-        transcript: conversation.lastMessageBody || "Nog geen transcriptie beschikbaar."
+        transcript: "Nog geen telefonische transcriptie beschikbaar."
       };
     });
 }
