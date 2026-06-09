@@ -263,26 +263,30 @@ function normalizeLiveData({ opportunities, conversations, calendars, voiceCallL
 
   demo.setters = setterMembers.map((member) => {
     const assignedOpps = opportunities.filter((item) => opportunityOwner(item, conversationOwnerByContactId) === member.ghlUserId);
-    const bingoCount = assignedOpps.filter((item) => stageId(item) === SETTER_STAGES.bingo).length;
+    const assignedEvents = calendarEvents.filter((event) => appointmentOwner(event, conversationOwnerByContactId) === member.ghlUserId && countedCalendarIds.has(event.calendarId));
+    const bingoEvents = assignedEvents.filter((event) => isBingoAppointment(event));
+    const stageBingoCount = assignedOpps.filter((item) => stageId(item) === SETTER_STAGES.bingo).length;
+    const bingoCount = bingoEvents.length || stageBingoCount;
     const nopeCount = assignedOpps.filter((item) => stageId(item) === SETTER_STAGES.nopeNotToday).length;
     const callConversations = conversations.filter((item) => assignedConversation(item) === member.ghlUserId && isCallConversation(item));
     const callsToday = callConversations.filter((item) => inRange(dateValue(item.lastMessageDate || item.updatedAt || item.dateUpdated), range.todayStart, range.now)).length;
     const callsWeek = callConversations.filter((item) => inRange(dateValue(item.lastMessageDate || item.updatedAt || item.dateUpdated), range.weekStart, range.now)).length;
     const answeredCalls = callConversations.filter((item) => isAnsweredConversation(item)).length;
+    const callMinutes = sumCallMinutes(callConversations, voiceCallLogs, member.ghlUserId);
     return {
       id: member.id,
       ghlUserId: member.ghlUserId,
       name: member.name,
       role: member.role,
-      loginHours: 0,
+      callMinutes,
       callsToday,
       callsWeek,
       answeredCalls,
-      noShows: assignedOpps.filter((item) => hasNoShowSignal(item)).length,
+      noShows: assignedEvents.filter((event) => appointmentStatus(event) === "no_show").length + assignedOpps.filter((item) => hasNoShowSignal(item)).length,
       bingos: bingoCount,
       callsPerBingo: ratio(callsWeek, bingoCount),
       conversationsPerBingo: ratio(answeredCalls, bingoCount),
-      bingosPerHour: 0,
+      bingosPerHour: ratio(bingoCount, callMinutes / 60),
       nopePerBingo: ratio(nopeCount, bingoCount)
     };
   });
@@ -299,7 +303,7 @@ function normalizeLiveData({ opportunities, conversations, calendars, voiceCallL
       ghlUserId: member.ghlUserId,
       name: member.name,
       role: member.role,
-      loginHours: 0,
+      callMinutes: 0,
       showed: Math.max(0, countedEvents.length - noShows),
       meetings: countedEvents.length,
       won,
@@ -328,7 +332,7 @@ function filterForRole(data, user) {
     if (setterTotals) {
       result.totals = {
         ...result.totals,
-        loginHours: setterTotals.loginHours,
+        callMinutes: setterTotals.callMinutes,
         callsToday: setterTotals.callsToday,
         callsWeek: setterTotals.callsWeek,
         answeredCalls: setterTotals.answeredCalls,
@@ -391,7 +395,7 @@ function opportunityOwner(item, conversationOwnerByContactId) {
 }
 
 function contactId(item) {
-  return item.contactId || item.contact_id || item.contact?.id || "";
+  return item.contactId || item.contact_id || item.contact?.id || item.contact?.contactId || "";
 }
 
 function ownerByContact(conversations) {
@@ -408,14 +412,14 @@ function assignedConversation(item) {
 }
 
 function isCallConversation(item) {
-  const type = String(item.lastMessageType || item.type || "").toUpperCase();
-  return type.includes("CALL") || type.includes("PHONE");
+  return String(item.lastMessageType || "").toUpperCase() === "TYPE_CALL";
 }
 
 function isAnsweredConversation(item) {
   const body = String(item.lastMessageBody || item.body || "").toLowerCase();
   const direction = String(item.lastMessageDirection || item.direction || "").toLowerCase();
-  return isCallConversation(item) && !body.includes("missed") && !body.includes("voicemail") && direction !== "missed";
+  const status = String(item.status || item.callStatus || item.lastMessageStatus || "").toLowerCase();
+  return isCallConversation(item) && !body.includes("missed") && !body.includes("voicemail") && !status.includes("missed") && direction !== "missed";
 }
 
 function hasNoShowSignal(item) {
@@ -433,6 +437,41 @@ function countedCalendarName(value) {
 
 function appointmentStatus(event) {
   return String(event.appointmentStatus || event.status || "").trim().toLowerCase().replace("-", "_");
+}
+
+function appointmentOwner(event, conversationOwnerByContactId) {
+  return event.createdByUserId || event.createdBy || event.bookedBy || event.assignedSetterId || conversationOwnerByContactId[contactId(event)] || "";
+}
+
+function isBingoAppointment(event) {
+  const status = appointmentStatus(event);
+  return status === "confirmed" || status === "showed" || status === "new";
+}
+
+function callDurationSeconds(item) {
+  const values = [
+    item.duration,
+    item.callDuration,
+    item.call_duration,
+    item.durationSeconds,
+    item.callDurationSeconds,
+    item.lastMessageMeta?.duration,
+    item.lastMessageMeta?.callDuration,
+    item.metadata?.duration,
+    item.metadata?.callDuration,
+    item.callDetails?.duration
+  ];
+  const value = values.find((candidate) => candidate !== undefined && candidate !== null && candidate !== "");
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : 0;
+}
+
+function sumCallMinutes(callConversations, voiceCallLogs, ghlUserId) {
+  const conversationSeconds = callConversations.reduce((sum, item) => sum + callDurationSeconds(item), 0);
+  const voiceSeconds = voiceCallLogs
+    .filter((log) => log.agentId === ghlUserId || log.userId === ghlUserId || log.assignedUserId === ghlUserId)
+    .reduce((sum, log) => sum + callDurationSeconds(log), 0);
+  return Number(((conversationSeconds + voiceSeconds) / 60).toFixed(1));
 }
 
 function ratio(numerator, denominator) {
@@ -459,7 +498,9 @@ function averageDaysToClose(opportunities) {
 
 function normalizeCalls({ conversations, voiceCallLogs, setters, closers }) {
   const closerId = closers[0] ? closers[0].id : "";
-  const callLogs = voiceCallLogs.map((log, index) => {
+  const callLogs = voiceCallLogs
+  .filter((log) => log.transcript || log.summary || callDurationSeconds(log) > 0)
+  .map((log, index) => {
     const owner = setters.find((setter) => setter.ghlUserId === log.agentId) || setters[index % Math.max(1, setters.length)];
     return {
       id: log.id || `voice-call-${index}`,
@@ -468,8 +509,8 @@ function normalizeCalls({ conversations, voiceCallLogs, setters, closers }) {
       owner: owner ? owner.name : "Setter",
       contact: log.contactName || log.contactId || "Contact",
       date: String(log.createdAt || "").slice(0, 10),
-      duration: secondsToClock(log.duration || 0),
-      answered: Number(log.duration || 0) > 0,
+      duration: secondsToClock(callDurationSeconds(log)),
+      answered: callDurationSeconds(log) > 0,
       result: hasAppointmentAction(log) ? "Bingo" : "Call",
       score: 0,
       transcript: log.transcript || log.summary || "Nog geen transcriptie beschikbaar."
@@ -490,7 +531,7 @@ function normalizeCalls({ conversations, voiceCallLogs, setters, closers }) {
         owner: owner ? owner.name : "Setter",
         contact: conversation.fullName || conversation.contactName || conversation.phone || "Contact",
         date: String(conversation.lastMessageDate || conversation.updatedAt || conversation.dateUpdated || "").slice(0, 10),
-        duration: "",
+        duration: secondsToClock(callDurationSeconds(conversation)),
         answered: isAnsweredConversation(conversation),
         result: "Call",
         score: 0,
@@ -514,9 +555,9 @@ function buildTotals(setters) {
   const callsWeek = total("callsWeek");
   const answeredCalls = total("answeredCalls");
   const bingos = total("bingos");
-  const loginHours = total("loginHours");
+  const callMinutes = total("callMinutes");
   return {
-    loginHours: Number(loginHours.toFixed(1)),
+    callMinutes: Number(callMinutes.toFixed(1)),
     callsToday: total("callsToday"),
     callsWeek,
     answeredCalls,
@@ -524,7 +565,7 @@ function buildTotals(setters) {
     bingos,
     callsPerBingo: ratio(callsWeek, bingos),
     conversationsPerBingo: ratio(answeredCalls, bingos),
-    bingosPerHour: ratio(bingos, loginHours),
+    bingosPerHour: ratio(bingos, callMinutes / 60),
     nopePerBingo: setters.length ? Number((setters.reduce((sum, item) => sum + Number(item.nopePerBingo || 0), 0) / setters.length).toFixed(1)) : 0
   };
 }
@@ -613,6 +654,7 @@ function sampleConversation(item) {
     lastMessageDirection: item.lastMessageDirection,
     lastMessageDate: item.lastMessageDate,
     updatedAt: item.updatedAt || item.dateUpdated,
+    duration: callDurationSeconds(item),
     hasBody: Boolean(item.lastMessageBody)
   };
 }
@@ -620,9 +662,13 @@ function sampleConversation(item) {
 function sampleCalendarEvent(event) {
   return {
     id: event.id,
+    contactId: contactId(event),
     title: event.title,
     calendarId: event.calendarId,
     assignedUserId: event.assignedUserId,
+    createdBy: event.createdBy,
+    createdByUserId: event.createdByUserId,
+    bookedBy: event.bookedBy,
     users: event.users,
     appointmentStatus: event.appointmentStatus,
     startTime: event.startTime,
@@ -671,13 +717,13 @@ function demoData() {
     const bingos = [8, 7, 6, 5, 5][index] || 4;
     const callsWeek = [248, 231, 219, 204, 198][index] || 160;
     const answeredCalls = [78, 72, 67, 61, 58][index] || 45;
-    const loginHours = [21.5, 20, 19.5, 18, 17.5][index] || 16;
+    const callMinutes = [96, 82, 74, 63, 58][index] || 45;
     return {
       id: member.id,
       ghlUserId: member.ghlUserId,
       name: member.name,
       role: member.role,
-      loginHours,
+      callMinutes,
       callsToday: [51, 45, 42, 38, 35][index] || 30,
       callsWeek,
       answeredCalls,
@@ -685,7 +731,7 @@ function demoData() {
       bingos,
       callsPerBingo: Number((callsWeek / Math.max(1, bingos)).toFixed(1)),
       conversationsPerBingo: Number((answeredCalls / Math.max(1, bingos)).toFixed(1)),
-      bingosPerHour: Number((bingos / Math.max(1, loginHours)).toFixed(2)),
+      bingosPerHour: Number((bingos / Math.max(1, callMinutes / 60)).toFixed(2)),
       nopePerBingo: Number(([0.5, 0.7, 0.8, 0.6, 0.4][index] || 0.5).toFixed(2))
     };
   });
@@ -694,7 +740,7 @@ function demoData() {
     ghlUserId: member.ghlUserId,
     name: member.name,
     role: member.role,
-    loginHours: [18, 17.5][index] || 16,
+    callMinutes: [64, 52][index] || 0,
     showed: [16, 14][index] || 0,
     meetings: [18, 15][index] || 0,
     won: [7, 5][index] || 0,
@@ -708,14 +754,14 @@ function demoData() {
   const totalBingos = total("bingos");
   const totalCallsWeek = total("callsWeek");
   const totalAnswered = total("answeredCalls");
-  const totalLoginHours = total("loginHours");
+  const totalCallMinutes = total("callMinutes");
   return {
     rawSync: { mode: "demo", opportunities: 24, conversations: 18, syncedAt: new Date().toISOString() },
     stageConfig: { setter: SETTER_STAGES, closer: CLOSER_STAGES, countedCalendars: COUNTED_CALENDARS },
     opportunityStageTotals: { readyToCall: 38, called: 91, followUp: 27, nopeNotToday: 14, bingo: totalBingos },
     closerStageTotals: { discoveryCall: 18, followUpCall: 9, noShow: 7, proposalSent: 6, dealClosed: 5, dealLost: 4, future: 3 },
     totals: {
-      loginHours: Number(totalLoginHours.toFixed(1)),
+      callMinutes: Number(totalCallMinutes.toFixed(1)),
       callsToday: total("callsToday"),
       callsWeek: totalCallsWeek,
       answeredCalls: totalAnswered,
@@ -723,7 +769,7 @@ function demoData() {
       bingos: totalBingos,
       callsPerBingo: Number((totalCallsWeek / Math.max(1, totalBingos)).toFixed(1)),
       conversationsPerBingo: Number((totalAnswered / Math.max(1, totalBingos)).toFixed(1)),
-      bingosPerHour: Number((totalBingos / Math.max(1, totalLoginHours)).toFixed(2)),
+      bingosPerHour: Number((totalBingos / Math.max(1, totalCallMinutes / 60)).toFixed(2)),
       nopePerBingo: Number((demoSetters.reduce((sum, item) => sum + item.nopePerBingo, 0) / Math.max(1, demoSetters.length)).toFixed(2))
     },
     setters: demoSetters,

@@ -553,7 +553,7 @@
           <div class="ap-card-head"><h2 data-i18n="setterPerformance">Setter performance</h2><span class="ap-chip" data-i18n="perPerson">Per persoon</span></div>
           <div class="ap-table-wrap">
             <table class="ap-table">
-              <thead><tr><th>Setter</th><th>Ingelogd</th><th>Calls vandaag</th><th>Calls week</th><th>Gesprekken</th><th>No-shows</th><th>Bingo's</th><th>Calls/Bingo</th><th>Bingo/uur</th></tr></thead>
+              <thead><tr><th>Setter</th><th>Min. gebeld</th><th>Calls vandaag</th><th>Calls week</th><th>Gesprekken</th><th>No-shows</th><th>Bingo's</th><th>Calls/Bingo</th><th>Bingo/uur</th></tr></thead>
               <tbody id="settersTable"></tbody>
             </table>
           </div>
@@ -565,7 +565,7 @@
           <div class="ap-card-head"><h2 data-i18n="closerPerformance">Closer performance</h2><span class="ap-chip" data-i18n="wonLost">Won/lost</span></div>
           <div class="ap-table-wrap">
             <table class="ap-table">
-              <thead><tr><th>Closer</th><th>Ingelogd</th><th>Opgekomen</th><th>Meetings</th><th>Gewonnen</th><th>Verloren</th><th>Dagen tot won</th><th>Closing %</th></tr></thead>
+              <thead><tr><th>Closer</th><th>Min. gebeld</th><th>Opgekomen</th><th>Meetings</th><th>Gewonnen</th><th>Verloren</th><th>Dagen tot won</th><th>Closing %</th></tr></thead>
               <tbody id="closersTable"></tbody>
             </table>
           </div>
@@ -612,7 +612,7 @@
         callsWeek: "Calls deze week",
         answeredCalls: "Gesprekken beantwoord",
         bingos: "Bingo's",
-        loginHours: "Ingelogde uren",
+        callMinutes: "Minuten gebeld",
         noShows: "No-shows",
         bingosPerHour: "Bingo's per uur",
         conversationsPerBingo: "Gesprekken per Bingo",
@@ -630,7 +630,7 @@
         transcriptDatabase: "Transcriptie database",
         searchPlaceholder: "Zoek contact, setter of resultaat",
         setter: "Setter",
-        loggedIn: "Ingelogd",
+        callMinutesShort: "Min. gebeld",
         callsTodayShort: "Calls vandaag",
         callsWeekShort: "Calls week",
         conversations: "Gesprekken",
@@ -649,7 +649,7 @@
         missed: "Waar ging het mis",
         wentWell: "Wat ging goed",
         couldImprove: "Wat kon beter",
-        hour: "uur",
+        minute: "min",
         management: "management"
       },
       en: {
@@ -677,7 +677,7 @@
         callsWeek: "Calls this week",
         answeredCalls: "Answered conversations",
         bingos: "Bingos",
-        loginHours: "Logged-in hours",
+        callMinutes: "Call minutes",
         noShows: "No-shows",
         bingosPerHour: "Bingos per hour",
         conversationsPerBingo: "Conversations per Bingo",
@@ -695,7 +695,7 @@
         transcriptDatabase: "Transcript database",
         searchPlaceholder: "Search contact, setter or result",
         setter: "Setter",
-        loggedIn: "Logged in",
+        callMinutesShort: "Call min.",
         callsTodayShort: "Calls today",
         callsWeekShort: "Calls week",
         conversations: "Conversations",
@@ -714,7 +714,7 @@
         missed: "Where it went wrong",
         wentWell: "What went well",
         couldImprove: "What could improve",
-        hour: "hours",
+        minute: "min",
         management: "management"
       }
     };
@@ -812,7 +812,7 @@
         stat(t("callsWeek"), data.totals.callsWeek),
         stat(t("answeredCalls"), data.totals.answeredCalls),
         stat(t("bingos"), data.totals.bingos),
-        stat(t("loginHours"), data.totals.loginHours),
+        stat(t("callMinutes"), data.totals.callMinutes),
         stat(t("noShows"), data.totals.noShows),
         stat(t("bingosPerHour"), data.totals.bingosPerHour),
         stat(t("conversationsPerBingo"), data.totals.conversationsPerBingo)
@@ -838,18 +838,18 @@
       document.getElementById("bingoProgress").style.width = `${Math.max(12, Math.min(100, 100 - data.totals.callsPerBingo))}%`;
       document.getElementById("nopeProgress").style.width = `${Math.max(12, Math.min(100, data.totals.nopePerBingo * 45))}%`;
 
-      document.querySelector("#section-setters thead").innerHTML = `<tr><th>${t("setter")}</th><th>${t("loggedIn")}</th><th>${t("callsTodayShort")}</th><th>${t("callsWeekShort")}</th><th>${t("conversations")}</th><th>${t("noShows")}</th><th>${t("bingos")}</th><th>${t("callsBingo")}</th><th>${t("bingoHour")}</th></tr>`;
-      document.querySelector("#section-closers thead").innerHTML = `<tr><th>${t("closer")}</th><th>${t("loggedIn")}</th><th>${t("showed")}</th><th>${t("meetings")}</th><th>${t("won")}</th><th>${t("lost")}</th><th>${t("daysToWon")}</th><th>Closing %</th></tr>`;
+      document.querySelector("#section-setters thead").innerHTML = `<tr><th>${t("setter")}</th><th>${t("callMinutesShort")}</th><th>${t("callsTodayShort")}</th><th>${t("callsWeekShort")}</th><th>${t("conversations")}</th><th>${t("noShows")}</th><th>${t("bingos")}</th><th>${t("callsBingo")}</th><th>${t("bingoHour")}</th></tr>`;
+      document.querySelector("#section-closers thead").innerHTML = `<tr><th>${t("closer")}</th><th>${t("callMinutesShort")}</th><th>${t("showed")}</th><th>${t("meetings")}</th><th>${t("won")}</th><th>${t("lost")}</th><th>${t("daysToWon")}</th><th>Closing %</th></tr>`;
 
       settersTable.innerHTML = rowOrEmpty(data.setters, (setter) => `
         <tr>
-          <td>${setter.name}</td><td>${format(setter.loginHours)} ${t("hour")}</td><td>${format(setter.callsToday)}</td><td>${format(setter.callsWeek)}</td><td>${format(setter.answeredCalls)}</td><td>${format(setter.noShows)}</td><td>${format(setter.bingos)}</td><td>${format(setter.callsPerBingo)}</td><td>${format(setter.bingosPerHour)}</td>
+          <td>${setter.name}</td><td>${format(setter.callMinutes)} ${t("minute")}</td><td>${format(setter.callsToday)}</td><td>${format(setter.callsWeek)}</td><td>${format(setter.answeredCalls)}</td><td>${format(setter.noShows)}</td><td>${format(setter.bingos)}</td><td>${format(setter.callsPerBingo)}</td><td>${format(setter.bingosPerHour)}</td>
         </tr>
       `);
 
       closersTable.innerHTML = rowOrEmpty(data.closers, (closer) => `
         <tr>
-          <td>${closer.name}</td><td>${format(closer.loginHours)} ${t("hour")}</td><td>${format(closer.showed)}</td><td>${format(closer.meetings)}</td><td>${format(closer.won)}</td><td>${format(closer.lost)}</td><td>${format(closer.avgDaysToClose)}</td><td>${format(closer.closeRate)}%</td>
+          <td>${closer.name}</td><td>${format(closer.callMinutes)} ${t("minute")}</td><td>${format(closer.showed)}</td><td>${format(closer.meetings)}</td><td>${format(closer.won)}</td><td>${format(closer.lost)}</td><td>${format(closer.avgDaysToClose)}</td><td>${format(closer.closeRate)}%</td>
         </tr>
       `);
 
