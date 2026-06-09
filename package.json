@@ -1,0 +1,12 @@
+{
+  "name": "autopilots-sales-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Autopilots sales performance dashboard with GoHighLevel data sync.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

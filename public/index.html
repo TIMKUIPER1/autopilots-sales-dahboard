@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autopilots Sales Dashboard</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800;900&family=Syne:wght@500;600;700&display=swap");
+
+    #ap-sales-dashboard {
+      --ap-bg: #f5f5f2;
+      --ap-card: #ffffff;
+      --ap-soft: #eeeeea;
+      --ap-soft-2: #f8f8f5;
+      --ap-text: #111111;
+      --ap-muted: #656565;
+      --ap-line: rgba(0, 0, 0, 0.1);
+      --ap-brown: #9f3826;
+      --ap-brown-dark: #7d2a1d;
+      --ap-black: #111111;
+      --ap-white: #ffffff;
+      --ap-green-soft: #dce9dd;
+      min-height: 100vh;
+      margin: 0;
+      background: var(--ap-bg);
+      color: var(--ap-text);
+      font-family: "Public Sans", Arial, sans-serif;
+    }
+
+    #ap-sales-dashboard * { box-sizing: border-box; }
+    #ap-sales-dashboard button,
+    #ap-sales-dashboard input,
+    #ap-sales-dashboard select { font: inherit; }
+    #ap-sales-dashboard button { cursor: pointer; }
+    #ap-sales-dashboard h1,
+    #ap-sales-dashboard h2,
+    #ap-sales-dashboard h3,
+    #ap-sales-dashboard p { margin: 0; }
+
+    #ap-sales-dashboard .ap-shell {
+      width: min(1440px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+    }
+
+    #ap-sales-dashboard .ap-login-wrap {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    #ap-sales-dashboard .ap-login {
+      width: min(460px, 100%);
+      background: var(--ap-card);
+      border: 1px solid var(--ap-line);
+      border-radius: 30px;
+      box-shadow: 0 24px 70px rgba(17, 17, 17, 0.1);
+      padding: 30px;
+    }
+
+    #ap-sales-dashboard .ap-brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      font-weight: 900;
+      margin-bottom: 26px;
+    }
+
+    #ap-sales-dashboard .ap-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--ap-brown);
+      color: var(--ap-white);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    #ap-sales-dashboard .ap-eyebrow,
+    #ap-sales-dashboard .ap-number,
+    #ap-sales-dashboard .ap-chip,
+    #ap-sales-dashboard .ap-score {
+      font-family: "Syne", "Public Sans", Arial, sans-serif;
+    }
+
+    #ap-sales-dashboard .ap-eyebrow {
+      color: var(--ap-brown);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    #ap-sales-dashboard .ap-login h1 {
+      font-size: clamp(34px, 5vw, 48px);
+      line-height: 1;
+      font-weight: 900;
+      margin-bottom: 14px;
+    }
+
+    #ap-sales-dashboard .ap-muted {
+      color: var(--ap-muted);
+      font-size: 15px;
+      line-height: 1.55;
+      font-weight: 500;
+    }
+
+    #ap-sales-dashboard .ap-form {
+      display: grid;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    #ap-sales-dashboard .ap-label {
+      display: grid;
+      gap: 7px;
+      color: var(--ap-muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    #ap-sales-dashboard .ap-input,
+    #ap-sales-dashboard .ap-select {
+      width: 100%;
+      min-height: 48px;
+      border-radius: 999px;
+      border: 1px solid var(--ap-line);
+      background: var(--ap-soft-2);
+      padding: 0 16px;
+      color: var(--ap-text);
+      outline: none;
+      font-weight: 700;
+    }
+
+    #ap-sales-dashboard .ap-input:focus,
+    #ap-sales-dashboard .ap-select:focus {
+      border-color: rgba(159, 56, 38, 0.5);
+      box-shadow: 0 0 0 4px rgba(159, 56, 38, 0.08);
+    }
+
+    #ap-sales-dashboard .ap-button {
+      min-height: 48px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 18px;
+      font-weight: 900;
+      transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+      white-space: nowrap;
+    }
+
+    #ap-sales-dashboard .ap-button:hover { transform: translateY(-1px); }
+    #ap-sales-dashboard .ap-button-primary { background: var(--ap-brown); color: var(--ap-white); border-color: var(--ap-brown); }
+    #ap-sales-dashboard .ap-button-primary:hover { background: var(--ap-brown-dark); border-color: var(--ap-brown-dark); }
+    #ap-sales-dashboard .ap-button-secondary { background: var(--ap-card); color: var(--ap-text); border-color: var(--ap-line); }
+    #ap-sales-dashboard .ap-full { width: 100%; }
+
+    #ap-sales-dashboard .ap-side {
+      min-height: 100vh;
+      background: var(--ap-card);
+      border-right: 1px solid var(--ap-line);
+      padding: 22px;
+      position: sticky;
+      top: 0;
+    }
+
+    #ap-sales-dashboard .ap-nav {
+      display: grid;
+      gap: 8px;
+      margin-top: 26px;
+    }
+
+    #ap-sales-dashboard .ap-nav button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ap-muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      font-weight: 900;
+      text-align: left;
+    }
+
+    #ap-sales-dashboard .ap-nav button.is-active {
+      background: var(--ap-soft-2);
+      color: var(--ap-brown);
+    }
+
+    #ap-sales-dashboard .ap-icon {
+      width: 10px;
+      height: 10px;
+      border-radius: 4px;
+      background: currentColor;
+      flex: 0 0 auto;
+    }
+
+    #ap-sales-dashboard .ap-main {
+      padding: 22px;
+      overflow: hidden;
+    }
+
+    #ap-sales-dashboard .ap-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    #ap-sales-dashboard .ap-title h1 {
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1;
+      font-weight: 900;
+      margin-bottom: 7px;
+    }
+
+    #ap-sales-dashboard .ap-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    #ap-sales-dashboard .ap-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    #ap-sales-dashboard .ap-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    #ap-sales-dashboard .ap-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #ap-sales-dashboard .ap-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    #ap-sales-dashboard .ap-card {
+      background: var(--ap-card);
+      border: 1px solid var(--ap-line);
+      border-radius: 24px;
+      box-shadow: 0 14px 40px rgba(17, 17, 17, 0.055);
+      padding: 20px;
+      min-width: 0;
+    }
+
+    #ap-sales-dashboard .ap-card-soft { background: var(--ap-soft-2); }
+
+    #ap-sales-dashboard .ap-stat small {
+      display: block;
+      color: var(--ap-muted);
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 9px;
+    }
+
+    #ap-sales-dashboard .ap-number {
+      display: block;
+      font-size: 32px;
+      line-height: 1;
+      font-weight: 700;
+    }
+
+    #ap-sales-dashboard .ap-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 26px;
+      border-radius: 999px;
+      padding: 0 10px;
+      background: rgba(159, 56, 38, 0.1);
+      color: var(--ap-brown);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    #ap-sales-dashboard .ap-section {
+      display: none;
+      animation: apFade 180ms ease;
+    }
+
+    #ap-sales-dashboard .ap-section.is-active { display: grid; gap: 14px; }
+    @keyframes apFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    #ap-sales-dashboard .ap-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    #ap-sales-dashboard .ap-card-head h2,
+    #ap-sales-dashboard .ap-card h2 {
+      font-size: 21px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    #ap-sales-dashboard .ap-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    #ap-sales-dashboard .ap-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    #ap-sales-dashboard .ap-table th,
+    #ap-sales-dashboard .ap-table td {
+      padding: 13px 10px;
+      border-bottom: 1px solid var(--ap-line);
+      text-align: left;
+      font-size: 13px;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    #ap-sales-dashboard .ap-table th {
+      color: var(--ap-muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    #ap-sales-dashboard .ap-table td { font-weight: 700; }
+    #ap-sales-dashboard .ap-table tr:last-child td { border-bottom: 0; }
+
+    #ap-sales-dashboard .ap-progress {
+      height: 9px;
+      border-radius: 999px;
+      background: var(--ap-soft);
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    #ap-sales-dashboard .ap-progress span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--ap-brown);
+    }
+
+    #ap-sales-dashboard .ap-pipeline {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(150px, 1fr));
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    #ap-sales-dashboard .ap-stage {
+      min-height: 134px;
+      background: var(--ap-soft-2);
+      border: 1px solid var(--ap-line);
+      border-radius: 20px;
+      padding: 14px;
+    }
+
+    #ap-sales-dashboard .ap-stage strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 14px;
+    }
+
+    #ap-sales-dashboard .ap-stage .ap-number { font-size: 28px; }
+
+    #ap-sales-dashboard .ap-call-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    #ap-sales-dashboard .ap-call {
+      border-radius: 20px;
+      border: 1px solid var(--ap-line);
+      background: var(--ap-soft-2);
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+    }
+
+    #ap-sales-dashboard .ap-call h3 {
+      font-size: 16px;
+      line-height: 1.2;
+      font-weight: 900;
+      margin-bottom: 7px;
+    }
+
+    #ap-sales-dashboard .ap-transcript {
+      color: var(--ap-muted);
+      font-size: 14px;
+      line-height: 1.55;
+      font-weight: 500;
+      margin-top: 12px;
+    }
+
+    #ap-sales-dashboard .ap-score {
+      min-width: 62px;
+      min-height: 62px;
+      border-radius: 50%;
+      background: var(--ap-black);
+      color: var(--ap-white);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    #ap-sales-dashboard .ap-coach {
+      display: none;
+      grid-column: 1 / -1;
+      background: var(--ap-card);
+      border: 1px solid var(--ap-line);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    #ap-sales-dashboard .ap-coach.is-open { display: grid; gap: 10px; }
+    #ap-sales-dashboard .ap-coach ul { margin: 0; padding-left: 18px; color: var(--ap-muted); font-weight: 600; line-height: 1.5; }
+
+    #ap-sales-dashboard .ap-error {
+      display: none;
+      margin-top: 12px;
+      color: var(--ap-brown);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    #ap-sales-dashboard .ap-error.is-visible { display: block; }
+    #ap-sales-dashboard .ap-hidden { display: none !important; }
+
+    @media (max-width: 1050px) {
+      #ap-sales-dashboard .ap-shell { grid-template-columns: 1fr; }
+      #ap-sales-dashboard .ap-side { min-height: auto; position: static; border-right: 0; border-bottom: 1px solid var(--ap-line); }
+      #ap-sales-dashboard .ap-nav { grid-template-columns: repeat(4, minmax(130px, 1fr)); overflow-x: auto; }
+      #ap-sales-dashboard .ap-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #ap-sales-dashboard .ap-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 680px) {
+      #ap-sales-dashboard .ap-main,
+      #ap-sales-dashboard .ap-side { padding: 14px; }
+      #ap-sales-dashboard .ap-login { padding: 22px; border-radius: 24px; }
+      #ap-sales-dashboard .ap-topbar,
+      #ap-sales-dashboard .ap-card-head,
+      #ap-sales-dashboard .ap-call { grid-template-columns: 1fr; display: grid; }
+      #ap-sales-dashboard .ap-actions { justify-content: stretch; }
+      #ap-sales-dashboard .ap-actions > * { width: 100%; }
+      #ap-sales-dashboard .ap-grid-4,
+      #ap-sales-dashboard .ap-grid-3,
+      #ap-sales-dashboard .ap-grid-2 { grid-template-columns: 1fr; }
+      #ap-sales-dashboard .ap-nav { grid-template-columns: 1fr 1fr; }
+      #ap-sales-dashboard .ap-number { font-size: 28px; }
+    }
+  </style>
+</head>
+<body id="ap-sales-dashboard">
+  <div class="ap-login-wrap" id="loginView">
+    <section class="ap-login" aria-label="Login">
+      <div class="ap-brand"><span class="ap-mark">AP</span><span>Autopilots Sales</span></div>
+      <div class="ap-eyebrow" data-i18n="teamDashboard">Team dashboard</div>
+      <h1 data-i18n="loginTitle">Login voor setters en closers.</h1>
+      <p class="ap-muted" data-i18n="loginText">Bekijk calls, Bingo's, pipeline bewegingen, deals en AI coaching vanuit een rustige salesomgeving.</p>
+      <form class="ap-form" id="loginForm">
+        <label class="ap-label"><span data-i18n="email">E-mail</span>
+          <input class="ap-input" name="email" type="email" autocomplete="email" value="admin@autopilots.nl" required>
+        </label>
+        <label class="ap-label"><span data-i18n="password">Wachtwoord</span>
+          <input class="ap-input" name="password" type="password" autocomplete="current-password" value="autopilot" required>
+        </label>
+        <label class="ap-label"><span data-i18n="language">Taal</span>
+          <select class="ap-select" id="loginLanguage">
+            <option value="nl">Nederlands</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button class="ap-button ap-button-primary ap-full" type="submit" data-i18n="loginButton">Inloggen</button>
+        <div class="ap-error" id="loginError"></div>
+      </form>
+    </section>
+  </div>
+
+  <div class="ap-shell ap-hidden" id="appView">
+    <aside class="ap-side">
+      <div class="ap-brand"><span class="ap-mark">AP</span><span>Sales cockpit</span></div>
+      <p class="ap-muted" id="viewerLabel"></p>
+      <nav class="ap-nav" id="nav">
+        <button class="is-active" data-section="overview"><span class="ap-icon"></span><span data-i18n="overview">Overzicht</span></button>
+        <button data-section="setters"><span class="ap-icon"></span><span data-i18n="setters">Setters</span></button>
+        <button data-section="closers"><span class="ap-icon"></span><span data-i18n="closers">Closers</span></button>
+        <button data-section="transcripts"><span class="ap-icon"></span><span data-i18n="transcripts">Transcripties</span></button>
+      </nav>
+    </aside>
+
+    <main class="ap-main">
+      <div class="ap-topbar">
+        <div class="ap-title">
+          <h1 data-i18n="salesPerformance">Sales prestaties</h1>
+          <p class="ap-muted" id="syncLabel">Data laden...</p>
+        </div>
+        <div class="ap-actions">
+          <select class="ap-select" id="languageSelect" aria-label="Language">
+            <option value="nl">Nederlands</option>
+            <option value="en">English</option>
+          </select>
+          <select class="ap-select" id="periodSelect" aria-label="Periode">
+            <option data-i18n="thisWeek">Deze week</option>
+            <option data-i18n="today">Vandaag</option>
+            <option data-i18n="thisMonth">Deze maand</option>
+          </select>
+          <button class="ap-button ap-button-secondary" id="refreshBtn" type="button" data-i18n="refresh">Verversen</button>
+          <button class="ap-button ap-button-primary" id="logoutBtn" type="button" data-i18n="logout">Uitloggen</button>
+        </div>
+      </div>
+
+      <section class="ap-section is-active" id="section-overview">
+        <div class="ap-grid ap-grid-4" id="totalStats"></div>
+        <div class="ap-card">
+          <div class="ap-card-head">
+            <h2 data-i18n="setterFunnel">Setter funnel</h2>
+            <span class="ap-chip" data-i18n="bingoMeans">Bingo = afspraak</span>
+          </div>
+          <div class="ap-pipeline" id="pipeline"></div>
+        </div>
+        <div class="ap-grid ap-grid-2">
+          <div class="ap-card">
+            <div class="ap-card-head"><h2 data-i18n="callsToBingo">Calls naar Bingo</h2><span class="ap-chip" id="callsPerBingo"></span></div>
+            <div class="ap-progress"><span id="bingoProgress"></span></div>
+          </div>
+          <div class="ap-card">
+            <div class="ap-card-head"><h2 data-i18n="nopeRatioTitle">Nope not today ratio</h2><span class="ap-chip" id="nopeRatio"></span></div>
+            <div class="ap-progress"><span id="nopeProgress"></span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ap-section" id="section-setters">
+        <div class="ap-card">
+          <div class="ap-card-head"><h2 data-i18n="setterPerformance">Setter performance</h2><span class="ap-chip" data-i18n="perPerson">Per persoon</span></div>
+          <div class="ap-table-wrap">
+            <table class="ap-table">
+              <thead><tr><th>Setter</th><th>Ingelogd</th><th>Calls vandaag</th><th>Calls week</th><th>Gesprekken</th><th>No-shows</th><th>Bingo's</th><th>Calls/Bingo</th><th>Bingo/uur</th></tr></thead>
+              <tbody id="settersTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="ap-section" id="section-closers">
+        <div class="ap-card">
+          <div class="ap-card-head"><h2 data-i18n="closerPerformance">Closer performance</h2><span class="ap-chip" data-i18n="wonLost">Won/lost</span></div>
+          <div class="ap-table-wrap">
+            <table class="ap-table">
+              <thead><tr><th>Closer</th><th>Ingelogd</th><th>Opgekomen</th><th>Meetings</th><th>Gewonnen</th><th>Verloren</th><th>Dagen tot won</th><th>Closing %</th></tr></thead>
+              <tbody id="closersTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="ap-section" id="section-transcripts">
+        <div class="ap-card">
+          <div class="ap-card-head">
+            <h2 data-i18n="transcriptDatabase">Transcriptie database</h2>
+            <input class="ap-input" id="searchInput" placeholder="Zoek contact, setter of resultaat" aria-label="Zoeken">
+          </div>
+          <div class="ap-call-list" id="callList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const state = { data: null, viewer: null, query: "", lang: localStorage.getItem("apSalesLang") || "nl" };
+    const i18n = {
+      nl: {
+        teamDashboard: "Team dashboard",
+        loginTitle: "Login voor setters en closers.",
+        loginText: "Bekijk calls, Bingo's, pipeline bewegingen, deals en AI coaching vanuit een rustige salesomgeving.",
+        email: "E-mail",
+        password: "Wachtwoord",
+        language: "Taal",
+        loginButton: "Inloggen",
+        overview: "Overzicht",
+        setters: "Setters",
+        closers: "Closers",
+        transcripts: "Transcripties",
+        salesPerformance: "Sales prestaties",
+        loading: "Data laden...",
+        thisWeek: "Deze week",
+        today: "Vandaag",
+        thisMonth: "Deze maand",
+        refresh: "Verversen",
+        logout: "Uitloggen",
+        liveSync: "Live gekoppeld - laatst gesynchroniseerd",
+        demoSync: "Demo-data actief - vul de backend token in voor live data",
+        callsToday: "Calls vandaag",
+        callsWeek: "Calls deze week",
+        answeredCalls: "Gesprekken beantwoord",
+        bingos: "Bingo's",
+        loginHours: "Ingelogde uren",
+        noShows: "No-shows",
+        bingosPerHour: "Bingo's per uur",
+        conversationsPerBingo: "Gesprekken per Bingo",
+        setterFunnel: "Setter funnel",
+        bingoMeans: "Bingo = afspraak",
+        opportunitiesInStage: "Opportunities in stage",
+        callsToBingo: "Calls naar Bingo",
+        nopeRatioTitle: "Nope not today ratio",
+        callsPerBingo: "calls per Bingo",
+        nopePerBingo: "Nope per Bingo",
+        setterPerformance: "Setter performance",
+        closerPerformance: "Closer performance",
+        perPerson: "Per persoon",
+        wonLost: "Won/lost",
+        transcriptDatabase: "Transcriptie database",
+        searchPlaceholder: "Zoek contact, setter of resultaat",
+        setter: "Setter",
+        loggedIn: "Ingelogd",
+        callsTodayShort: "Calls vandaag",
+        callsWeekShort: "Calls week",
+        conversations: "Gesprekken",
+        callsBingo: "Calls/Bingo",
+        bingoHour: "Bingo/uur",
+        closer: "Closer",
+        showed: "Opgekomen",
+        meetings: "Meetings",
+        won: "Gewonnen",
+        lost: "Verloren",
+        daysToWon: "Dagen tot won",
+        noRoleData: "Geen data voor deze rol.",
+        noCalls: "Geen gesprekken gevonden.",
+        aiScore: "AI score",
+        loadingCoach: "AI coaching wordt geladen...",
+        missed: "Waar ging het mis",
+        wentWell: "Wat ging goed",
+        couldImprove: "Wat kon beter",
+        hour: "uur",
+        management: "management"
+      },
+      en: {
+        teamDashboard: "Team dashboard",
+        loginTitle: "Login for setters and closers.",
+        loginText: "View calls, Bingos, pipeline movement, deals and AI coaching from one calm sales workspace.",
+        email: "Email",
+        password: "Password",
+        language: "Language",
+        loginButton: "Log in",
+        overview: "Overview",
+        setters: "Setters",
+        closers: "Closers",
+        transcripts: "Transcripts",
+        salesPerformance: "Sales performance",
+        loading: "Loading data...",
+        thisWeek: "This week",
+        today: "Today",
+        thisMonth: "This month",
+        refresh: "Refresh",
+        logout: "Log out",
+        liveSync: "Live connected - last synced",
+        demoSync: "Demo data active - add the backend token for live data",
+        callsToday: "Calls today",
+        callsWeek: "Calls this week",
+        answeredCalls: "Answered conversations",
+        bingos: "Bingos",
+        loginHours: "Logged-in hours",
+        noShows: "No-shows",
+        bingosPerHour: "Bingos per hour",
+        conversationsPerBingo: "Conversations per Bingo",
+        setterFunnel: "Setter funnel",
+        bingoMeans: "Bingo = appointment",
+        opportunitiesInStage: "Opportunities in stage",
+        callsToBingo: "Calls to Bingo",
+        nopeRatioTitle: "Nope not today ratio",
+        callsPerBingo: "calls per Bingo",
+        nopePerBingo: "Nope per Bingo",
+        setterPerformance: "Setter performance",
+        closerPerformance: "Closer performance",
+        perPerson: "Per person",
+        wonLost: "Won/lost",
+        transcriptDatabase: "Transcript database",
+        searchPlaceholder: "Search contact, setter or result",
+        setter: "Setter",
+        loggedIn: "Logged in",
+        callsTodayShort: "Calls today",
+        callsWeekShort: "Calls week",
+        conversations: "Conversations",
+        callsBingo: "Calls/Bingo",
+        bingoHour: "Bingo/hour",
+        closer: "Closer",
+        showed: "Showed",
+        meetings: "Meetings",
+        won: "Won",
+        lost: "Lost",
+        daysToWon: "Days to won",
+        noRoleData: "No data for this role.",
+        noCalls: "No conversations found.",
+        aiScore: "AI score",
+        loadingCoach: "AI coaching is loading...",
+        missed: "Where it went wrong",
+        wentWell: "What went well",
+        couldImprove: "What could improve",
+        hour: "hours",
+        management: "management"
+      }
+    };
+
+    const loginView = document.getElementById("loginView");
+    const appView = document.getElementById("appView");
+    const loginForm = document.getElementById("loginForm");
+    const loginError = document.getElementById("loginError");
+    const viewerLabel = document.getElementById("viewerLabel");
+    const syncLabel = document.getElementById("syncLabel");
+    const totalStats = document.getElementById("totalStats");
+    const pipeline = document.getElementById("pipeline");
+    const settersTable = document.getElementById("settersTable");
+    const closersTable = document.getElementById("closersTable");
+    const callList = document.getElementById("callList");
+    const searchInput = document.getElementById("searchInput");
+    const loginLanguage = document.getElementById("loginLanguage");
+    const languageSelect = document.getElementById("languageSelect");
+
+    init();
+
+    async function init() {
+      bindEvents();
+      try {
+        const me = await api("/api/me");
+        state.viewer = me.user;
+        await loadDashboard();
+        showApp();
+      } catch {
+        showLogin();
+      }
+    }
+
+    function bindEvents() {
+      loginLanguage.value = state.lang;
+      languageSelect.value = state.lang;
+      loginLanguage.addEventListener("change", () => setLanguage(loginLanguage.value));
+      languageSelect.addEventListener("change", () => setLanguage(languageSelect.value));
+
+      loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        loginError.classList.remove("is-visible");
+        const form = new FormData(loginForm);
+        try {
+          const response = await api("/api/login", {
+            method: "POST",
+            body: JSON.stringify({ email: form.get("email"), password: form.get("password") })
+          });
+          state.viewer = response.user;
+          await loadDashboard();
+          showApp();
+        } catch (error) {
+          loginError.textContent = error.message;
+          loginError.classList.add("is-visible");
+        }
+      });
+
+      document.getElementById("logoutBtn").addEventListener("click", async () => {
+        await api("/api/logout", { method: "POST" });
+        showLogin();
+      });
+
+      document.getElementById("refreshBtn").addEventListener("click", loadDashboard);
+
+      document.getElementById("nav").addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-section]");
+        if (!button) return;
+        document.querySelectorAll("#ap-sales-dashboard .ap-nav button").forEach((item) => item.classList.remove("is-active"));
+        document.querySelectorAll("#ap-sales-dashboard .ap-section").forEach((item) => item.classList.remove("is-active"));
+        button.classList.add("is-active");
+        document.getElementById(`section-${button.dataset.section}`).classList.add("is-active");
+      });
+
+      searchInput.addEventListener("input", () => {
+        state.query = searchInput.value.trim().toLowerCase();
+        renderCalls();
+      });
+    }
+
+    async function loadDashboard() {
+      state.data = await api("/api/dashboard");
+      state.viewer = state.data.viewer;
+      render();
+    }
+
+    function render() {
+      const data = state.data;
+      viewerLabel.textContent = `${state.viewer.name} - ${roleLabel(state.viewer.role)}`;
+      syncLabel.textContent = data.rawSync.mode === "live"
+        ? `${t("liveSync")} ${time(data.rawSync.syncedAt)}`
+        : t("demoSync");
+
+      totalStats.innerHTML = [
+        stat(t("callsToday"), data.totals.callsToday),
+        stat(t("callsWeek"), data.totals.callsWeek),
+        stat(t("answeredCalls"), data.totals.answeredCalls),
+        stat(t("bingos"), data.totals.bingos),
+        stat(t("loginHours"), data.totals.loginHours),
+        stat(t("noShows"), data.totals.noShows),
+        stat(t("bingosPerHour"), data.totals.bingosPerHour),
+        stat(t("conversationsPerBingo"), data.totals.conversationsPerBingo)
+      ].join("");
+
+      const stages = [
+        ["Ready to call", "readyToCall"],
+        ["Called", "called"],
+        ["Follow up", "followUp"],
+        ["Nope not today", "nopeNotToday"],
+        ["BINGO", "bingo"]
+      ];
+      pipeline.innerHTML = stages.map(([label, key]) => `
+        <div class="ap-stage">
+          <strong>${label}</strong>
+          <span class="ap-number">${format(data.opportunityStageTotals[key] || 0)}</span>
+          <p class="ap-muted">${t("opportunitiesInStage")}</p>
+        </div>
+      `).join("");
+
+      document.getElementById("callsPerBingo").textContent = `${format(data.totals.callsPerBingo)} ${t("callsPerBingo")}`;
+      document.getElementById("nopeRatio").textContent = `${format(data.totals.nopePerBingo)} ${t("nopePerBingo")}`;
+      document.getElementById("bingoProgress").style.width = `${Math.max(12, Math.min(100, 100 - data.totals.callsPerBingo))}%`;
+      document.getElementById("nopeProgress").style.width = `${Math.max(12, Math.min(100, data.totals.nopePerBingo * 45))}%`;
+
+      document.querySelector("#section-setters thead").innerHTML = `<tr><th>${t("setter")}</th><th>${t("loggedIn")}</th><th>${t("callsTodayShort")}</th><th>${t("callsWeekShort")}</th><th>${t("conversations")}</th><th>${t("noShows")}</th><th>${t("bingos")}</th><th>${t("callsBingo")}</th><th>${t("bingoHour")}</th></tr>`;
+      document.querySelector("#section-closers thead").innerHTML = `<tr><th>${t("closer")}</th><th>${t("loggedIn")}</th><th>${t("showed")}</th><th>${t("meetings")}</th><th>${t("won")}</th><th>${t("lost")}</th><th>${t("daysToWon")}</th><th>Closing %</th></tr>`;
+
+      settersTable.innerHTML = rowOrEmpty(data.setters, (setter) => `
+        <tr>
+          <td>${setter.name}</td><td>${format(setter.loginHours)} ${t("hour")}</td><td>${format(setter.callsToday)}</td><td>${format(setter.callsWeek)}</td><td>${format(setter.answeredCalls)}</td><td>${format(setter.noShows)}</td><td>${format(setter.bingos)}</td><td>${format(setter.callsPerBingo)}</td><td>${format(setter.bingosPerHour)}</td>
+        </tr>
+      `);
+
+      closersTable.innerHTML = rowOrEmpty(data.closers, (closer) => `
+        <tr>
+          <td>${closer.name}</td><td>${format(closer.loginHours)} ${t("hour")}</td><td>${format(closer.showed)}</td><td>${format(closer.meetings)}</td><td>${format(closer.won)}</td><td>${format(closer.lost)}</td><td>${format(closer.avgDaysToClose)}</td><td>${format(closer.closeRate)}%</td>
+        </tr>
+      `);
+
+      renderCalls();
+      applyRoleNav();
+    }
+
+    function renderCalls() {
+      const calls = (state.data.calls || []).filter((call) => {
+        const haystack = `${call.owner} ${call.contact} ${call.result} ${call.transcript}`.toLowerCase();
+        return !state.query || haystack.includes(state.query);
+      });
+
+      callList.innerHTML = calls.length ? calls.map((call) => `
+        <article class="ap-call">
+          <div>
+            <h3>${call.contact}</h3>
+            <p class="ap-muted">${call.owner} - ${call.date} - ${call.duration} - ${call.result}</p>
+            <p class="ap-transcript">${call.transcript}</p>
+          </div>
+          <div>
+            <span class="ap-score">${call.score}</span>
+            <button class="ap-button ap-button-secondary ap-full" style="margin-top:10px" type="button" onclick="scoreCall('${call.id}')">${t("aiScore")}</button>
+          </div>
+          <div class="ap-coach" id="coach-${call.id}"></div>
+        </article>
+      `).join("") : `<p class="ap-muted">${t("noCalls")}</p>`;
+    }
+
+    async function scoreCall(id) {
+      const coach = document.getElementById(`coach-${id}`);
+      coach.classList.add("is-open");
+      coach.innerHTML = `<p class="ap-muted">${t("loadingCoach")}</p>`;
+      const response = await api(`/api/calls/${id}/score`, { method: "POST" });
+      coach.innerHTML = `
+        <strong>${t("aiScore")}: ${response.score.total}</strong>
+        <p class="ap-muted"><strong>${t("missed")}:</strong> ${coachCopy(response.score).missedMoment}</p>
+        <div><strong>${t("wentWell")}</strong><ul>${coachCopy(response.score).wentWell.map((item) => `<li>${item}</li>`).join("")}</ul></div>
+        <div><strong>${t("couldImprove")}</strong><ul>${coachCopy(response.score).couldImprove.map((item) => `<li>${item}</li>`).join("")}</ul></div>
+      `;
+    }
+
+    function applyRoleNav() {
+      const closerBtn = document.querySelector('[data-section="closers"]');
+      const setterBtn = document.querySelector('[data-section="setters"]');
+      closerBtn.classList.remove("ap-hidden");
+      setterBtn.classList.remove("ap-hidden");
+      if (state.viewer.role === "setter") closerBtn.classList.add("ap-hidden");
+      if (state.viewer.role === "closer") setterBtn.classList.add("ap-hidden");
+      const active = document.querySelector("#ap-sales-dashboard .ap-nav button.is-active");
+      if (active && active.classList.contains("ap-hidden")) {
+        document.querySelector('[data-section="overview"]').click();
+      }
+    }
+
+    function showApp() {
+      loginView.classList.add("ap-hidden");
+      appView.classList.remove("ap-hidden");
+    }
+
+    function showLogin() {
+      appView.classList.add("ap-hidden");
+      loginView.classList.remove("ap-hidden");
+    }
+
+    function stat(label, value) {
+      return `<div class="ap-card ap-stat"><small>${label}</small><span class="ap-number">${format(value)}</span></div>`;
+    }
+
+    function rowOrEmpty(items, renderItem) {
+      return items && items.length ? items.map(renderItem).join("") : `<tr><td colspan="9">${t("noRoleData")}</td></tr>`;
+    }
+
+    function format(value) {
+      const formatter = new Intl.NumberFormat(state.lang === "nl" ? "nl-NL" : "en-US", { maximumFractionDigits: 1 });
+      return typeof value === "number" ? formatter.format(value) : value;
+    }
+
+    function time(value) {
+      return new Date(value).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function roleLabel(role) {
+      return role === "admin" ? t("management") : role;
+    }
+
+    function t(key) {
+      return (i18n[state.lang] && i18n[state.lang][key]) || i18n.nl[key] || key;
+    }
+
+    function setLanguage(lang) {
+      state.lang = lang === "en" ? "en" : "nl";
+      localStorage.setItem("apSalesLang", state.lang);
+      loginLanguage.value = state.lang;
+      languageSelect.value = state.lang;
+      document.documentElement.lang = state.lang;
+      document.querySelectorAll("[data-i18n]").forEach((node) => {
+        node.textContent = t(node.dataset.i18n);
+      });
+      searchInput.placeholder = t("searchPlaceholder");
+      searchInput.setAttribute("aria-label", t("searchPlaceholder"));
+      syncLabel.textContent = t("loading");
+      if (state.data) render();
+    }
+
+    function coachCopy(score) {
+      if (state.lang === "nl") return score;
+      return {
+        missedMoment: score.missedMoment.includes("twijfel")
+          ? "The lead showed doubt; a short value reframe could have helped here."
+          : "There was room to ask deeper questions about the decision criteria.",
+        wentWell: [
+          "The opening was clear and calm.",
+          "The lead had enough room to explain the problem.",
+          "The setter kept the conversation structured and moved toward a clear next step."
+        ],
+        couldImprove: [
+          "Make the pain and urgency concrete earlier.",
+          "Summarize more often before moving to the next question.",
+          "End with a sharper next step and confirm commitment."
+        ]
+      };
+    }
+
+    async function api(url, options = {}) {
+      const response = await fetch(url, {
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        ...options
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Request mislukt.");
+      return data;
+    }
+
+    window.scoreCall = scoreCall;
+    setLanguage(state.lang);
+  </script>
+</body>
+</html>
