@@ -440,7 +440,7 @@ function appointmentStatus(event) {
 }
 
 function appointmentOwner(event, conversationOwnerByContactId) {
-  return event.createdByUserId || event.createdBy || event.bookedBy || event.assignedSetterId || conversationOwnerByContactId[contactId(event)] || "";
+  return event.createdByUserId || event.createdBy?.userId || event.createdBy || event.bookedBy || event.assignedSetterId || conversationOwnerByContactId[contactId(event)] || "";
 }
 
 function isBingoAppointment(event) {
